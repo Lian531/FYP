@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Login — Lumière{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="container">
+    <div class="auth-card">
+
+      <!-- Logo -->
+      <div class="text-center mb-4">
+        <div class="auth-logo">Lumière<span>.</span></div>
+        <h2 class="auth-title mt-2">Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to your beauty account</p>
+      </div>
+
+      <!-- Form -->
+      <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="email">
+            <i class="bi bi-envelope me-1"></i>Email Address
+          </label>
+          <input type="email" id="email" name="email"
+                 class="form-control-beauty"
+                 placeholder="you@example.com"
+                 required autocomplete="email" />
+          <div class="field-error" id="emailErr"></div>
+        </div>
+a
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="password">
+            <i class="bi bi-lock me-1"></i>Password
+          </label>
+          <div style="position:relative;">
+            <input type="password" id="password" name="password"
+                   class="form-control-beauty"
+                   placeholder="••••••••"
+                   required autocomplete="current-password" />
+            <button type="button"
+                    onclick="togglePwd('password', this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;color:var(--text-light);">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="field-error" id="pwdErr"></div>
+        </div>
+
+        <button type="submit" class="btn-beauty btn-beauty-lg w-100 mt-2" id="loginBtn">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+        </button>
+      </form>
+
+      <hr class="divider-beauty" />
+
+      <p class="text-center" style="font-size:.93rem;color:var(--text-light);">
+        Don't have an account?
+        <a href="{{ url_for('register') }}" style="color:var(--secondary);font-weight:600;">
+          Create one free
+        </a>
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePwd(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<i class="bi bi-eye"></i>';
+    }
+  }
+
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn  = document.getElementById('loginBtn');
+
+  function setFieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+  }
+
+  loginForm.addEventListener('submit', function(e) {
+    let ok = true;
+    const email = document.getElementById('email').value.trim();
+    const pwd   = document.getElementById('password').value;
+
+    setFieldError('emailErr', '');
+    setFieldError('pwdErr', '');
+
+    if (!email) {
+      setFieldError('emailErr', 'Email address is required.');
+      ok = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError('emailErr', 'Please enter a valid email address.');
+      ok = false;
+    }
+    if (!pwd) {
+      setFieldError('pwdErr', 'Password is required.');
+      ok = false;
+    }
+
+    if (!ok) { e.preventDefault(); return; }
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in…';
+  });
+</script>
+{% endblock %}

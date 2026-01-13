@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Create Account — Lumière{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="container">
+    <div class="auth-card">
+
+      <div class="text-center mb-4">
+        <div class="auth-logo">Lumière<span>.</span></div>
+        <h2 class="auth-title mt-2">Create Your Account</h2>
+        <p class="auth-subtitle">Join free and discover your perfect beauty match</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('register') }}" id="registerForm" novalidate>
+
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="name">
+            <i class="bi bi-person me-1"></i>Full Name
+          </label>
+          <input type="text" id="name" name="name"
+                 class="form-control-beauty"
+                 placeholder="Jane Doe"
+                 required autocomplete="name" />
+          <div class="field-error" id="nameErr"></div>
+        </div>
+
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="email">
+            <i class="bi bi-envelope me-1"></i>Email Address
+          </label>
+          <input type="email" id="email" name="email"
+                 class="form-control-beauty"
+                 placeholder="you@example.com"
+                 required autocomplete="email" />
+          <div class="field-error" id="emailErr"></div>
+        </div>
+
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="password">
+            <i class="bi bi-lock me-1"></i>Password
+          </label>
+          <div style="position:relative;">
+            <input type="password" id="password" name="password"
+                   class="form-control-beauty"
+                   placeholder="At least 6 characters"
+                   required autocomplete="new-password" />
+            <button type="button" onclick="togglePwd('password', this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;color:var(--text-light);">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="field-error" id="pwdErr"></div>
+        </div>
+
+        <div class="form-group-beauty">
+          <label class="form-label-beauty" for="confirm_password">
+            <i class="bi bi-lock-fill me-1"></i>Confirm Password
+          </label>
+          <div style="position:relative;">
+            <input type="password" id="confirm_password" name="confirm_password"
+                   class="form-control-beauty"
+                   placeholder="Repeat your password"
+                   required autocomplete="new-password" />
+            <button type="button" onclick="togglePwd('confirm_password', this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;color:var(--text-light);">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="field-error" id="confirmErr"></div>
+        </div>
+
+        <!-- Password strength bar -->
+        <div style="margin-bottom:1rem;">
+          <div style="height:5px;background:#e8d0b8;border-radius:10px;overflow:hidden;">
+            <div id="pwdStrengthBar"
+                 style="height:100%;width:0%;border-radius:10px;
+                        transition:width .3s,background .3s;background:var(--primary);"></div>
+          </div>
+          <div id="pwdStrengthLabel"
+               style="font-size:.78rem;color:var(--text-light);margin-top:.3rem;"></div>
+        </div>
+
+        <button type="submit" class="btn-beauty btn-beauty-lg w-100 mt-1" id="registerBtn">
+          <i class="bi bi-person-plus me-2"></i>Create Account
+        </button>
+      </form>
+
+      <hr class="divider-beauty" />
+
+      <p class="text-center" style="font-size:.93rem;color:var(--text-light);">
+        Already have an account?
+        <a href="{{ url_for('login') }}" style="color:var(--secondary);font-weight:600;">
+          Sign in here
+        </a>
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePwd(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<i class="bi bi-eye"></i>';
+    }
+  }
+
+  function setErr(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+  }
+
+  // Password strength meter
+  document.getElementById('password').addEventListener('input', function () {
+    const val = this.value;
+    const bar = document.getElementById('pwdStrengthBar');
+    const label = document.getElementById('pwdStrengthLabel');
+    let strength = 0;
+    if (val.length >= 6)           strength++;
+    if (val.length >= 10)          strength++;
+    if (/[A-Z]/.test(val))         strength++;
+    if (/[0-9]/.test(val))         strength++;
+    if (/[^A-Za-z0-9]/.test(val))  strength++;
+    const levels  = ['','Very Weak','Weak','Fair','Strong','Very Strong'];
+    const colours = ['','#e74c3c','#e67e22','#f1c40f','#2ecc71','#27ae60'];
+    bar.style.width      = (strength * 20) + '%';
+    bar.style.background = colours[strength] || '';
+    label.textContent    = levels[strength]  || '';
+    // Live confirm match check
+    const confirm = document.getElementById('confirm_password').value;
+    if (confirm) setErr('confirmErr', confirm !== val ? 'Passwords do not match.' : '');
+  });
+
+  // Live confirm check
+  document.getElementById('confirm_password').addEventListener('input', function () {
+    const pwd = document.getElementById('password').value;
+    setErr('confirmErr', this.value && this.value !== pwd ? 'Passwords do not match.' : '');
+  });
+
+  // Form submit validation
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    let ok = true;
+    const name    = document.getElementById('name').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    const pwd     = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password').value;
+
+    setErr('nameErr', ''); setErr('emailErr', '');
+    setErr('pwdErr',  ''); setErr('confirmErr', '');
+
+    if (!name || name.length < 2) {
+      setErr('nameErr', 'Please enter your full name (at least 2 characters).');
+      ok = false;
+    }
+    if (!email) {
+      setErr('emailErr', 'Email address is required.');
+      ok = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErr('emailErr', 'Please enter a valid email address.');
+      ok = false;
+    }
+    if (!pwd || pwd.length < 6) {
+      setErr('pwdErr', 'Password must be at least 6 characters.');
+      ok = false;
+    }
+    if (pwd !== confirm) {
+      setErr('confirmErr', 'Passwords do not match.');
+      ok = false;
+    }
+
+    if (!ok) { e.preventDefault(); return; }
+
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account…';
+  });
+</script>
+{% endblock %}

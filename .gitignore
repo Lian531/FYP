@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+Backend/uploads/
+Backend/Face Dataset/
+*.db
+.DS_Store

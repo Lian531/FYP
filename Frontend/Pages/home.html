@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Lumière — Discover Your Perfect Beauty Match{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container position-relative" style="z-index:1;">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-tag">✨ AI-Powered Beauty Analysis</div>
+        <h1 class="hero-title">
+          Discover Your<br>
+          <span class="highlight">Perfect Beauty</span><br>
+          Match
+        </h1>
+        <p class="hero-subtitle">
+          Answer a few questions, upload your photo, and our AI detects your skin type
+          &amp; tone — then recommends the exact products made for you.
+        </p>
+        <div class="d-flex gap-3 flex-wrap">
+          {% if session.get('user_id') %}
+            <a href="{{ url_for('questionnaire') }}" class="btn-beauty btn-beauty-lg">
+              <i class="bi bi-clipboard-check me-2"></i>Take the Skin Quiz
+            </a>
+          {% else %}
+            <a href="{{ url_for('register') }}" class="btn-beauty btn-beauty-lg">
+              <i class="bi bi-stars me-2"></i>Get Started Free
+            </a>
+            <a href="{{ url_for('login') }}" class="btn-beauty-outline btn-beauty-lg">
+              Sign In
+            </a>
+          {% endif %}
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-num">35+</div>
+            <div class="stat-label">Products</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">5</div>
+            <div class="stat-label">Skin Types</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">3</div>
+            <div class="stat-label">Skin Tones</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">AI</div>
+            <div class="stat-label">Powered</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center d-none d-lg-block">
+        <div class="hero-visual mx-auto">💄</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Why Lumière?</div>
+      <h2 class="section-title">Smart Beauty, Personalised for You</h2>
+      <p class="section-subtitle">
+        No more guessing at the makeup counter. We analyse your skin and recommend what actually works.
+      </p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">🔬</div>
+          <div class="feature-title">AI Skin Analysis</div>
+          <p style="color:var(--text-light);font-size:.95rem;">
+            OpenCV face detection reads your real skin tone from your photo —
+            no manual guessing, no shade mismatches.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <div class="feature-title">Skin Type Quiz</div>
+          <p style="color:var(--text-light);font-size:.95rem;">
+            Four targeted questions instantly classify your skin as oily, dry,
+            normal, combination, or sensitive.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">💎</div>
+          <div class="feature-title">Personalised Products</div>
+          <p style="color:var(--text-light);font-size:.95rem;">
+            Foundation, moisturiser, sunscreen, lipstick and more — curated to match
+            both your skin type and tone perfectly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Simple Process</div>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">Four steps to your perfect beauty routine — done in under two minutes.</p>
+    </div>
+    <div class="row g-3 text-center">
+      {% for step in [
+        ('1','📝','Create Account',   'Register free and get instant access to all features.'),
+        ('2','📋','Take the Quiz',    'Answer 4 quick questions about your skin behaviour.'),
+        ('3','📸','Upload Your Photo','Our AI reads your skin tone directly from your face photo.'),
+        ('4','✨','Get Results',      'Receive a personalised product list crafted just for you.'),
+      ] %}
+      <div class="col-6 col-md-3">
+        <div class="step-card">
+          <div class="step-num">{{ step[0] }}</div>
+          <div style="font-size:2rem;margin-bottom:.5rem;">{{ step[1] }}</div>
+          <div class="step-title">{{ step[2] }}</div>
+          <p style="color:var(--text-light);font-size:.88rem;margin:0;">{{ step[3] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- SKIN TYPES -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Full Coverage</div>
+      <h2 class="section-title">Every Skin Type &amp; Tone</h2>
+    </div>
+    <div class="row g-3 justify-content-center">
+      {% for s in [
+        ('💧','Dry',         'Needs extra hydration'),
+        ('✨','Oily',        'Shine-control focused'),
+        ('🌿','Normal',      'Balanced and healthy'),
+        ('🌊','Combination', 'Mixed T-zone'),
+        ('🌸','Sensitive',   'Fragrance-free picks'),
+      ] %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="feature-card text-center py-3 px-2">
+          <div style="font-size:2rem;margin-bottom:.5rem;">{{ s[0] }}</div>
+          <div class="feature-title" style="font-size:.95rem;">{{ s[1] }}</div>
+          <p style="color:var(--text-light);font-size:.8rem;margin:0;">{{ s[2] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section" style="background:linear-gradient(135deg,#2d1b1b,#4a2a20);">
+  <div class="container text-center">
+    <div style="font-size:3rem;margin-bottom:1rem;">✨</div>
+    <h2 style="color:white;font-weight:800;font-size:2.2rem;margin-bottom:1rem;">Ready for Your Glow Up?</h2>
+    <p style="color:rgba(255,255,255,.65);max-width:480px;margin:0 auto 2rem;font-size:1.05rem;">
+      Join users who found their perfect beauty routine with Lumière's AI-powered analysis.
+    </p>
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('questionnaire') }}" class="btn-beauty btn-beauty-lg">
+        <i class="bi bi-clipboard-check me-2"></i>Start Your Analysis
+      </a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="btn-beauty btn-beauty-lg">
+        <i class="bi bi-stars me-2"></i>Create Free Account
+      </a>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
