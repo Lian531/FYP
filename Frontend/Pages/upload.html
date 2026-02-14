@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Upload Your Photo — Lumière{% endblock %}
+
+{% block content %}
+<div style="background:linear-gradient(135deg,#fff8f5,#f5e6d3);min-height:90vh;padding:3rem 0;">
+  <div class="container">
+    <div class="upload-container">
+
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <div class="section-badge">Step 2 of 2</div>
+        <h2 class="section-title mt-2">Upload Your Face Photo</h2>
+        <p class="section-subtitle">
+          Our AI detects your skin tone from your photo.
+          Use a clear, well-lit front-facing shot with minimal makeup.
+        </p>
+      </div>
+
+      <!-- Skin type badge -->
+      {% if skin_type %}
+      <div class="text-center mb-4">
+        <span class="analysis-badge badge-skin-type">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Skin Type Detected: <strong>{{ skin_type | capitalize }}</strong>
+        </span>
+      </div>
+      {% endif %}
+
+      <!-- Upload form -->
+      <form method="POST" action="{{ url_for('upload') }}"
+            enctype="multipart/form-data" id="uploadForm">
+
+        <!-- Drop zone -->
+        <div class="upload-zone" id="dropZone"
+             onclick="document.getElementById('photoInput').click()">
+          <div id="dropContent">
+            <div class="upload-icon">📸</div>
+            <div class="upload-title">Drag &amp; drop or click to choose photo</div>
+            <p class="upload-hint">JPG, PNG, WEBP &bull; Max 10 MB &bull; Front-facing</p>
+            <div class="mt-3">
+              <span class="btn-beauty px-4 py-2"
+                    style="font-size:.9rem;pointer-events:none;">Choose Photo</span>
+            </div>
+          </div>
+          <!-- Image preview (hidden until file chosen) -->
+          <img id="previewImg" class="upload-preview" alt="Preview" />
+        </div>
+
+        <input type="file" id="photoInput" name="photo"
+               accept="image/jpeg,image/png,image/webp"
+               style="display:none;" required />
+
+        <!-- File info strip -->
+        <div id="fileInfo" class="mt-3 p-3"
+             style="display:none;flex-direction:row;align-items:center;
+                    justify-content:space-between;
+                    background:var(--white);border-radius:var(--radius-sm);
+                    border:1px solid var(--accent-dark);">
+          <div>
+            <i class="bi bi-image me-2 text-beauty"></i>
+            <span id="fileName" style="font-weight:600;color:var(--dark);"></span>
+            <span id="fileSize"
+                  style="color:var(--text-light);font-size:.85rem;margin-left:.5rem;"></span>
+          </div>
+          <button type="button" onclick="resetUpload()"
+                  style="background:none;border:none;color:var(--secondary);
+                         cursor:pointer;font-size:1.2rem;">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+
+        <!-- Photo tips -->
+        <div class="mt-4 p-3"
+             style="background:var(--white);border-radius:var(--radius-md);
+                    border:1px solid rgba(200,168,130,.3);">
+          <div style="font-weight:700;color:var(--dark);font-size:.9rem;margin-bottom:.6rem;">
+            <i class="bi bi-lightbulb me-1 text-beauty"></i>Tips for the most accurate result:
+          </div>
+          <div class="row g-2" style="font-size:.85rem;color:var(--text-light);">
+            <div class="col-6"><i class="bi bi-check2 text-beauty me-1"></i>Natural lighting</div>
+            <div class="col-6"><i class="bi bi-check2 text-beauty me-1"></i>Face camera directly</div>
+            <div class="col-6"><i class="bi bi-check2 text-beauty me-1"></i>Minimal makeup</div>
+            <div class="col-6"><i class="bi bi-check2 text-beauty me-1"></i>No heavy shadows</div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="text-center mt-4">
+          <button type="submit" class="btn-beauty btn-beauty-lg px-5"
+                  id="analyzeBtn">
+            <i class="bi bi-cpu me-2"></i>Analyse My Skin Tone
+          </button>
+          <div id="loadingMsg"
+               style="display:none;color:var(--text-light);margin-top:1rem;font-size:.9rem;">
+            <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+            Analysing your photo — this may take a moment…
+          </div>
+          <p style="color:var(--text-light);font-size:.82rem;margin-top:.8rem;">
+            <i class="bi bi-shield-lock me-1"></i>
+            Your photo is processed privately and not shared.
+          </p>
+        </div>
+
+        <div class="text-center mt-3">
+          <a href="{{ url_for('questionnaire') }}"
+             style="color:var(--text-light);font-size:.9rem;">
+            <i class="bi bi-arrow-left me-1"></i>Redo the skin quiz
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const photoInput  = document.getElementById('photoInput');
+  const dropZone    = document.getElementById('dropZone');
+  const previewImg  = document.getElementById('previewImg');
+  const dropContent = document.getElementById('dropContent');
+  const fileInfo    = document.getElementById('fileInfo');
+  const fileName    = document.getElementById('fileName');
+  const fileSize    = document.getElementById('fileSize');
+  const analyzeBtn  = document.getElementById('analyzeBtn');
+  const uploadForm  = document.getElementById('uploadForm');
+  const loadingMsg  = document.getElementById('loadingMsg');
+
+  function fmtSize(b) {
+    return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+  }
+
+  const ALLOWED_TYPES = ['image/jpeg','image/jpg','image/png','image/webp'];
+  const MAX_SIZE_MB   = 10;
+  const MAX_SIZE_B    = MAX_SIZE_MB * 1024 * 1024;
+
+  let uploadErrEl = document.getElementById('uploadErr');
+
+  function showUploadError(msg) {
+    if (!uploadErrEl) {
+      uploadErrEl = document.createElement('div');
+      uploadErrEl.id = 'uploadErr';
+      uploadErrEl.style.cssText = 'display:block;margin-top:.6rem;text-align:center;' +
+        'color:#c0392b;background:#fde8e8;border:1px solid #f5c6c6;' +
+        'border-radius:8px;padding:.5rem 1rem;font-weight:600;font-size:.9rem;';
+      dropZone.parentNode.insertBefore(uploadErrEl, dropZone.nextSibling);
+    }
+    if (msg) {
+      uploadErrEl.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>' + msg;
+      uploadErrEl.style.display = 'block';
+      dropZone.style.borderColor = '#c0392b';
+    } else {
+      uploadErrEl.style.display = 'none';
+      dropZone.style.borderColor = '';
+    }
+  }
+
+  function validateFile(file) {
+    if (!file) { showUploadError('Please select a file.'); return false; }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      showUploadError('Invalid file type. Please upload a JPG, PNG, or WEBP image.');
+      return false;
+    }
+    if (file.size > MAX_SIZE_B) {
+      showUploadError(`File too large (${fmtSize(file.size)}). Maximum size is ${MAX_SIZE_MB} MB.`);
+      return false;
+    }
+    showUploadError('');
+    return true;
+  }
+
+  function showPreview(file) {
+    if (!validateFile(file)) { resetUpload(); return; }
+    const reader = new FileReader();
+    reader.onerror = () => {
+      showUploadError('Could not read the file. It may be corrupted. Please try another image.');
+      resetUpload();
+    };
+    reader.onload = e => {
+      // Sanity-check it renders as an image
+      const img = new Image();
+      img.onerror = () => {
+        showUploadError('File appears to be corrupted or not a valid image.');
+        resetUpload();
+      };
+      img.onload = () => {
+        previewImg.src            = e.target.result;
+        previewImg.style.display  = 'block';
+        dropContent.style.display = 'none';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    fileName.textContent   = file.name;
+    fileSize.textContent   = fmtSize(file.size);
+    fileInfo.style.display = 'flex';
+    showUploadError('');
+  }
+
+  function resetUpload() {
+    photoInput.value          = '';
+    previewImg.src            = '';
+    previewImg.style.display  = 'none';
+    dropContent.style.display = 'block';
+    fileInfo.style.display    = 'none';
+    showUploadError('');
+  }
+
+  photoInput.addEventListener('change', () => {
+    if (photoInput.files[0]) showPreview(photoInput.files[0]);
+  });
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        showUploadError('Invalid file type. Please drop a JPG, PNG, or WEBP image.');
+        return;
+      }
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      photoInput.files = dt.files;
+      showPreview(f);
+    }
+  });
+
+  uploadForm.addEventListener('submit', function(e) {
+    if (!photoInput.files[0]) {
+      e.preventDefault();
+      showUploadError('No file selected.');
+      return;
+    }
+    if (!validateFile(photoInput.files[0])) { e.preventDefault(); return; }
+    analyzeBtn.disabled      = true;
+    loadingMsg.style.display = 'block';
+    analyzeBtn.innerHTML     = '<span class="spinner-border spinner-border-sm me-2"></span>Analysing…';
+  });
+</script>
+{% endblock %}

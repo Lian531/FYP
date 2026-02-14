@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Skin Type Quiz — Lumière{% endblock %}
+
+{% block content %}
+<div style="background:linear-gradient(135deg,#fff8f5,#f5e6d3);min-height:90vh;padding:3rem 0;">
+  <div class="container">
+    <div class="quiz-container">
+
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <div class="section-badge">Step 1 of 2</div>
+        <h2 class="section-title mt-2">Discover Your Skin Type</h2>
+        <p class="section-subtitle">
+          Answer four quick questions honestly. There are no wrong answers —
+          just describe what your skin normally does.
+        </p>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="quiz-progress-bar">
+        <div class="quiz-progress-fill" id="progressFill" style="width:0%;"></div>
+      </div>
+
+      <form method="POST" action="{{ url_for('questionnaire') }}" id="quizForm">
+
+        <!-- Q1 -->
+        <div class="quiz-card">
+          <div class="quiz-question">
+            <div class="quiz-q-num">1</div>
+            <span>Does your skin become oily or shiny within a few hours of washing?</span>
+          </div>
+          <div class="quiz-options">
+            <label class="quiz-option-label">
+              <input type="radio" name="q1" value="1" required />
+              <i class="bi bi-check-circle" style="font-size:1.2rem;color:var(--primary);"></i>
+              Yes, definitely
+            </label>
+            <label class="quiz-option-label">
+              <input type="radio" name="q1" value="0" required />
+              <i class="bi bi-x-circle" style="font-size:1.2rem;color:#b0907e;"></i>
+              No, not really
+            </label>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="quiz-card">
+          <div class="quiz-question">
+            <div class="quiz-q-num">2</div>
+            <span>Does your skin feel tight, flaky, or dry after washing your face?</span>
+          </div>
+          <div class="quiz-options">
+            <label class="quiz-option-label">
+              <input type="radio" name="q2" value="1" required />
+              <i class="bi bi-check-circle" style="font-size:1.2rem;color:var(--primary);"></i>
+              Yes, it does
+            </label>
+            <label class="quiz-option-label">
+              <input type="radio" name="q2" value="0" required />
+              <i class="bi bi-x-circle" style="font-size:1.2rem;color:#b0907e;"></i>
+              No, feels fine
+            </label>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="quiz-card">
+          <div class="quiz-question">
+            <div class="quiz-q-num">3</div>
+            <span>Do you get acne, pimples, or frequent breakouts?</span>
+          </div>
+          <div class="quiz-options">
+            <label class="quiz-option-label">
+              <input type="radio" name="q3" value="1" required />
+              <i class="bi bi-check-circle" style="font-size:1.2rem;color:var(--primary);"></i>
+              Yes, often
+            </label>
+            <label class="quiz-option-label">
+              <input type="radio" name="q3" value="0" required />
+              <i class="bi bi-x-circle" style="font-size:1.2rem;color:#b0907e;"></i>
+              Rarely or never
+            </label>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="quiz-card">
+          <div class="quiz-question">
+            <div class="quiz-q-num">4</div>
+            <span>Do you experience redness, itching, or skin irritation / reactions?</span>
+          </div>
+          <div class="quiz-options">
+            <label class="quiz-option-label">
+              <input type="radio" name="q4" value="1" required />
+              <i class="bi bi-check-circle" style="font-size:1.2rem;color:var(--primary);"></i>
+              Yes, frequently
+            </label>
+            <label class="quiz-option-label">
+              <input type="radio" name="q4" value="0" required />
+              <i class="bi bi-x-circle" style="font-size:1.2rem;color:#b0907e;"></i>
+              No, rarely
+            </label>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <button type="submit" class="btn-beauty btn-beauty-lg px-5"
+                  id="submitBtn" disabled>
+            <i class="bi bi-arrow-right-circle me-2"></i>Detect My Skin Type
+          </button>
+          <p style="color:var(--text-light);font-size:.85rem;margin-top:.8rem;">
+            Next: upload your photo for skin tone detection.
+          </p>
+        </div>
+
+      </form>
+
+      <!-- Reference key -->
+      <div class="mt-5 p-3" style="background:var(--white);border-radius:var(--radius-md);
+           box-shadow:var(--shadow-sm);border:1px solid rgba(200,168,130,.2);">
+        <div style="font-weight:700;color:var(--dark);margin-bottom:.8rem;font-size:.9rem;">
+          <i class="bi bi-info-circle me-1 text-beauty"></i>How skin types are determined:
+        </div>
+        <div class="row g-2" style="font-size:.82rem;color:var(--text-light);">
+          <div class="col-6 col-md-4"><span style="font-weight:600;color:var(--secondary);">Sensitive</span> — Yes to Q4 (priority)</div>
+          <div class="col-6 col-md-4"><span style="font-weight:600;color:var(--secondary);">Combination</span> — Yes to Q1 + Q2</div>
+          <div class="col-6 col-md-4"><span style="font-weight:600;color:var(--secondary);">Oily</span> — Yes to Q1 or Q3</div>
+          <div class="col-6 col-md-4"><span style="font-weight:600;color:var(--secondary);">Dry</span> — Yes to Q2 only</div>
+          <div class="col-6 col-md-4"><span style="font-weight:600;color:var(--secondary);">Normal</span> — No to all</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const radios       = document.querySelectorAll('input[type="radio"]');
+  const submitBtn    = document.getElementById('submitBtn');
+  const progressFill = document.getElementById('progressFill');
+
+  function updateProgress() {
+    const answered = new Set(
+      [...document.querySelectorAll('input[type="radio"]:checked')]
+        .map(r => r.name)
+    ).size;
+    progressFill.style.width = (answered / 4 * 100) + '%';
+    submitBtn.disabled = answered < 4;
+  }
+
+  radios.forEach(radio => {
+    radio.addEventListener('change', function () {
+      document.querySelectorAll(`input[name="${this.name}"]`)
+        .forEach(r => r.closest('.quiz-option-label').classList.remove('checked'));
+      this.closest('.quiz-option-label').classList.add('checked');
+      updateProgress();
+    });
+  });
+</script>
+{% endblock %}
