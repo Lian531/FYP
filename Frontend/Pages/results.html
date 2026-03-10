@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Your Beauty Recommendations — Lumière{% endblock %}
+
+{% block content %}
+
+<!-- ── RESULTS HERO ── -->
+<section class="results-hero">
+  <div class="container">
+
+    <!-- Uploaded photo + badges -->
+    <div class="mb-3">
+      {% if analysis.image_path %}
+        <img src="{{ url_for('uploaded_file', filename=analysis.image_path) }}"
+             alt="Your photo" class="user-photo mb-3" />
+      {% endif %}
+    </div>
+
+    <h1 class="section-title mb-2">Your Personalised Recommendations</h1>
+    <p class="section-subtitle mb-3">
+      Based on your skin analysis, here are the products perfectly matched for you.
+    </p>
+
+    <!-- Skin type + tone badges -->
+    <div class="mb-2">
+      <span class="analysis-badge badge-skin-type">
+        <i class="bi bi-clipboard-check me-1"></i>
+        Skin Type: <strong>{{ skin_type | capitalize }}</strong>
+      </span>
+      <span class="analysis-badge badge-tone-{{ skin_tone }}">
+        <i class="bi bi-palette me-1"></i>
+        Skin Tone: <strong>{{ skin_tone | capitalize if skin_tone else 'Not detected' }}</strong>
+      </span>
+    </div>
+
+    <!-- Skin-tone visual circle -->
+    <div class="tone-circle {{ skin_tone }} mt-3">
+      {% if skin_tone == 'white' %}🌸
+      {% elif skin_tone == 'brown' %}🌰
+      {% elif skin_tone == 'black' %}✨
+      {% else %}🎨
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<!-- ── RECOMMENDATION EXPLANATION ── -->
+<section class="section py-4" style="background:#fff;">
+  <div class="container">
+    <div class="row g-3 justify-content-center text-center">
+
+      <!-- Skin Type card -->
+      <div class="col-md-4">
+        <div class="feature-card py-3">
+          <div class="feature-icon mx-auto">
+            {% if skin_type == 'oily' %}✨
+            {% elif skin_type == 'dry' %}💧
+            {% elif skin_type == 'combination' %}🌊
+            {% elif skin_type == 'sensitive' %}🌸
+            {% else %}🌿
+            {% endif %}
+          </div>
+          <div class="feature-title">{{ skin_type | capitalize }} Skin</div>
+          <p style="color:var(--text-light);font-size:.88rem;margin:0;">
+            {% if skin_type == 'oily' %}
+              Products that control shine and minimise breakouts.
+            {% elif skin_type == 'dry' %}
+              Rich, hydrating formulas to restore your moisture barrier.
+            {% elif skin_type == 'combination' %}
+              Balanced picks for your T-zone and dry patches.
+            {% elif skin_type == 'sensitive' %}
+              Fragrance-free, hypoallergenic, calming formulas.
+            {% else %}
+              Gentle, balanced products for everyday use.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- Skin Tone card -->
+      <div class="col-md-4">
+        <div class="feature-card py-3">
+          <div class="feature-icon mx-auto">🎨</div>
+          <div class="feature-title">{{ skin_tone | capitalize }} Tone</div>
+          <p style="color:var(--text-light);font-size:.88rem;margin:0;">
+            {% if skin_tone == 'white' %}
+              Cool-to-neutral undertones — shades that enhance your fair complexion.
+            {% elif skin_tone == 'brown' %}
+              Warm undertones — rich pigments that complement your medium complexion.
+            {% elif skin_tone == 'black' %}
+              Deep, bold shades with cool undertones that pop on deeper skin.
+            {% else %}
+              Products personalised to your skin profile.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- Total products card -->
+      <div class="col-md-4">
+        <div class="feature-card py-3">
+          <div class="feature-icon mx-auto">🛍️</div>
+          <div class="feature-title">
+            {{ by_category.values() | sum(start=[]) | list | length }} Products Found
+          </div>
+          <p style="color:var(--text-light);font-size:.88rem;margin:0;">
+            Across {{ by_category | length }} categories, handpicked for your skin profile.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── PRODUCT RECOMMENDATIONS ── -->
+<section class="section" style="background:#fdf7f3;">
+  <div class="container">
+
+    {% if by_category %}
+
+      <!-- Category icons map -->
+      {% set cat_icons = {
+        'Foundation': '💄',
+        'Face Wash':  '🧴',
+        'Moisturizer':'💆',
+        'Sunscreen':  '☀️',
+        'Concealer':  '✨',
+        'Lipstick':   '💋',
+        'Powder':     '🌸',
+      } %}
+
+      {% for category, products in by_category.items() %}
+      <div class="category-section">
+
+        <!-- Category heading -->
+        <div class="category-heading">
+          <span style="font-size:1.5rem;">{{ cat_icons.get(category, '🛍️') }}</span>
+          {{ category }}
+          <span class="tag-pill ms-2">{{ products | length }} picks</span>
+        </div>
+
+        <!-- Product grid -->
+        <div class="row g-3">
+          {% for product in products %}
+          <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="product-card h-100">
+
+              <!-- Icon header -->
+              <div class="product-card-header">
+                {% if product.image_url %}
+                  <img src="{{ url_for('static', filename=product.image_url) }}"
+                       alt="{{ product.name }}"
+                       style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
+                {% else %}
+                  {{ cat_icons.get(product.category, '🛍️') }}
+                {% endif %}
+              </div>
+
+              <!-- Body -->
+              <div class="product-card-body">
+                <div class="product-cat-badge">{{ product.category }}</div>
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-brand">
+                  <i class="bi bi-building me-1" style="font-size:.8rem;"></i>
+                  {{ product.brand or 'Lumière Brand' }}
+                </div>
+
+                {% if product.description %}
+                  <p class="product-desc">{{ product.description }}</p>
+                {% endif %}
+
+                <!-- Skin tags -->
+                <div class="d-flex gap-1 flex-wrap mb-2">
+                  {% if product.skin_type != 'all' %}
+                    <span class="tag-pill" style="font-size:.72rem;">
+                      {{ product.skin_type | capitalize }}
+                    </span>
+                  {% endif %}
+                  {% if product.skin_tone != 'all' %}
+                    <span class="tag-pill" style="font-size:.72rem;
+                      {% if product.skin_tone == 'brown' %}background:#a0624a;color:white;
+                      {% elif product.skin_tone == 'black' %}background:#3d2314;color:white;
+                      {% endif %}">
+                      {{ product.skin_tone | capitalize }} tone
+                    </span>
+                  {% endif %}
+                </div>
+
+                <!-- Price -->
+                {% if product.price %}
+                  <div class="product-price">
+                    NPR {{ "%.2f"|format(product.price) }}
+                  </div>
+                {% endif %}
+
+                <!-- Stock status -->
+                <div class="mt-2 mb-1">
+                  {% if product.stock is none or product.stock > 0 %}
+                    <span class="stock-badge in-stock">
+                      <i class="bi bi-check-circle-fill me-1"></i>In Stock
+                    </span>
+                  {% else %}
+                    <span class="stock-badge out-of-stock">
+                      <i class="bi bi-x-circle-fill me-1"></i>Out of Stock
+                    </span>
+                  {% endif %}
+                </div>
+
+                <!-- Shopping actions -->
+                <div class="product-actions mt-2">
+                  <form class="ajax-cart-form" action="{{ url_for('cart_add') }}" method="post">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <button type="submit" class="btn-cart"
+                      {% if product.stock is not none and product.stock == 0 %}disabled{% endif %}>
+                      <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                    </button>
+                  </form>
+                  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn-details">
+                    <i class="bi bi-eye me-1"></i>Details
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div><!-- /category-section -->
+      {% endfor %}
+
+    {% else %}
+      <!-- No products found -->
+      <div class="text-center py-5">
+        <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+        <h3 style="color:var(--dark);">No products found</h3>
+        <p style="color:var(--text-light);">
+          No products matched your skin profile yet. Ask the admin to add more products.
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Action buttons -->
+    <div class="text-center mt-5 pt-2">
+      <a href="{{ url_for('questionnaire') }}" class="btn-beauty-outline btn-beauty-lg me-3">
+        <i class="bi bi-arrow-repeat me-2"></i>Retake Quiz
+      </a>
+      <a href="{{ url_for('upload') }}" class="btn-beauty btn-beauty-lg">
+        <i class="bi bi-camera me-2"></i>Upload New Photo
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
