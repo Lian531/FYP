@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Shop — Lumière{% endblock %}
+
+{% block content %}
+
+<!-- ── SHOP HERO ── -->
+<section class="shop-hero">
+  <div class="container">
+    <h1 class="section-title mb-2">
+      <i class="bi bi-shop me-2" style="color:var(--primary);"></i>Shop All Products
+    </h1>
+    <p class="section-subtitle">Discover our full range of skincare and beauty products.</p>
+  </div>
+</section>
+
+<!-- ── FILTER BAR ── -->
+<div class="shop-filters-bar">
+  <div class="container">
+    <form class="shop-filter-form" method="get" action="{{ url_for('shop') }}">
+      <input type="text" name="search" class="form-control" placeholder="Search products…"
+             value="{{ current_search }}" style="min-width:180px;">
+
+      <select name="category" class="form-select" style="min-width:150px;">
+        <option value="">All Categories</option>
+        {% for cat in ['Foundation','Face Wash','Moisturizer','Sunscreen','Concealer','Lipstick','Powder'] %}
+          <option value="{{ cat }}"
+            {% if current_category == cat %}selected{% endif %}>
+            {{ cat }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="sort" class="form-select" style="min-width:160px;">
+        <option value="name_asc"  {% if current_sort == 'name_asc'  %}selected{% endif %}>Sort: A → Z</option>
+        <option value="name_desc" {% if current_sort == 'name_desc' %}selected{% endif %}>Sort: Z → A</option>
+        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Price: Low → High</option>
+        <option value="price_desc"{% if current_sort == 'price_desc'%}selected{% endif %}>Price: High → Low</option>
+      </select>
+
+      <input type="number" name="min_price" class="form-control" placeholder="Min $"
+             value="{{ min_price }}" style="max-width:90px;" min="0" step="0.01">
+      <input type="number" name="max_price" class="form-control" placeholder="Max $"
+             value="{{ max_price }}" style="max-width:90px;" min="0" step="0.01">
+
+      <button type="submit" class="btn-beauty" style="padding:0.46rem 1.3rem;">
+        <i class="bi bi-search me-1"></i>Filter
+      </button>
+      {% if current_search or current_category or min_price or max_price %}
+        <a href="{{ url_for('shop') }}" class="btn-beauty-outline" style="padding:0.42rem 1.1rem;">
+          <i class="bi bi-x-lg me-1"></i>Clear
+        </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- ── PRODUCT GRID ── -->
+<section class="section" style="background:#fdf7f3;padding-top:2rem;">
+  <div class="container">
+
+    <p class="shop-results-count mb-3">
+      {{ products | length }} product{{ 's' if products | length != 1 }} found
+    </p>
+
+    {% if products %}
+      <div class="row g-3">
+        {% set cat_icons = {
+          'Foundation': '💄', 'Face Wash': '🧴', 'Moisturizer': '💆',
+          'Sunscreen': '☀️', 'Concealer': '✨', 'Lipstick': '💋', 'Powder': '🌸',
+        } %}
+        {% for product in products %}
+        <div class="col-sm-6 col-md-4 col-lg-3">
+          <div class="product-card h-100">
+
+            <div class="product-card-header">
+              {% if product.image_url %}
+                <img src="{{ url_for('static', filename=product.image_url) }}"
+                     alt="{{ product.name }}"
+                     style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
+              {% else %}
+                {{ cat_icons.get(product.category, '🛍️') }}
+              {% endif %}
+            </div>
+
+            <div class="product-card-body">
+              <div class="product-cat-badge">{{ product.category }}</div>
+              <div class="product-name">{{ product.name }}</div>
+              <div class="product-brand">
+                <i class="bi bi-building me-1" style="font-size:.8rem;"></i>
+                {{ product.brand or 'Lumière Brand' }}
+              </div>
+
+              {% if product.description %}
+                <p class="product-desc">{{ product.description[:90] }}{% if product.description|length > 90 %}…{% endif %}</p>
+              {% endif %}
+
+              <div class="d-flex gap-1 flex-wrap mb-2">
+                {% if product.skin_type and product.skin_type != 'all' %}
+                  <span class="tag-pill" style="font-size:.72rem;">{{ product.skin_type | capitalize }}</span>
+                {% endif %}
+                {% if product.skin_tone_target and product.skin_tone_target != 'all' %}
+                  <span class="tag-pill" style="font-size:.72rem;
+                    {% if product.skin_tone_target == 'brown' %}background:#a0624a;color:white;
+                    {% elif product.skin_tone_target == 'black' %}background:#3d2314;color:white;
+                    {% endif %}">{{ product.skin_tone_target | capitalize }} tone</span>
+                {% endif %}
+              </div>
+
+              {% if product.price %}
+                <div class="product-price">NPR {{ "%.2f"|format(product.price) }}</div>
+              {% endif %}
+
+              <div class="mt-2 mb-1">
+                {% if product.stock is none or product.stock > 0 %}
+                  <span class="stock-badge in-stock">
+                    <i class="bi bi-check-circle-fill me-1"></i>In Stock
+                  </span>
+                {% else %}
+                  <span class="stock-badge out-of-stock">
+                    <i class="bi bi-x-circle-fill me-1"></i>Out of Stock
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="product-actions mt-2">
+                <form class="ajax-cart-form" action="{{ url_for('cart_add') }}" method="post">
+                  <input type="hidden" name="product_id" value="{{ product.id }}">
+                  <button type="submit" class="btn-cart"
+                    {% if product.stock is not none and product.stock == 0 %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                  </button>
+                </form>
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn-details">
+                  <i class="bi bi-eye me-1"></i>Details
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="text-center py-5">
+        <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+        <h3 style="color:var(--dark);">No products found</h3>
+        <p style="color:var(--text-light);">Try adjusting your filters or search term.</p>
+        <a href="{{ url_for('shop') }}" class="btn-beauty mt-3">Browse All Products</a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

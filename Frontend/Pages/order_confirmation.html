@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed — Lumière{% endblock %}
+
+{% block content %}
+
+<!-- ── CONFIRMATION HERO ── -->
+<section class="confirmation-hero">
+  <div class="container">
+    <div class="confirmation-icon">✓</div>
+    <h1 class="section-title mb-2" style="color:#2e7d32;">Order Confirmed!</h1>
+    <p class="section-subtitle">
+      Thank you, <strong>{{ order.name }}</strong>! Your order #{{ order.id }} has been placed successfully.
+    </p>
+  </div>
+</section>
+
+<!-- ── ORDER SUMMARY ── -->
+<section class="section" style="background:#fdf7f3;padding-top:2.5rem;">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+
+      <!-- Order Items -->
+      <div class="col-lg-7">
+        <div class="order-summary-card">
+          <div class="cart-summary-title">
+            <i class="bi bi-receipt me-1"></i>Your Order
+          </div>
+
+          {% set cat_icons = {
+            'Foundation': '💄', 'Face Wash': '🧴', 'Moisturizer': '💆',
+            'Sunscreen': '☀️', 'Concealer': '✨', 'Lipstick': '💋', 'Powder': '🌸',
+          } %}
+
+          {% for item in order.items %}
+          <div class="order-item-row">
+            <div>
+              <span style="font-weight:600;color:var(--dark);">
+                {{ cat_icons.get(item.product.category, '🛍️') }} {{ item.product.name }}
+              </span>
+              <br>
+              <span style="font-size:.82rem;color:var(--text-light);">
+                {{ item.product.brand or 'Lumière' }} · Qty {{ item.quantity }}
+              </span>
+            </div>
+            <div style="font-weight:700;color:var(--secondary);white-space:nowrap;">
+              NPR {{ "%.2f"|format(item.unit_price * item.quantity) }}
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="cart-summary-total mt-2">
+            <span>Total Paid</span>
+            <span>NPR {{ "%.2f"|format(order.total) }}</span>
+          </div>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="order-summary-card mt-3">
+          <div class="cart-summary-title">
+            <i class="bi bi-geo-alt me-1"></i>Delivery Address
+          </div>
+          <p style="color:var(--text-light);font-size:.92rem;line-height:1.7;margin:0;">
+            <strong style="color:var(--dark);">{{ order.name }}</strong><br>
+            {{ order.email }}<br>
+            {% if order.phone %}{{ order.phone }}<br>{% endif %}
+            {{ order.address }}
+          </p>
+        </div>
+
+        <div class="mt-3 p-3" style="background:#e8f5e9;border-radius:var(--radius-sm);">
+          <div style="font-size:.85rem;color:#2e7d32;display:flex;align-items:center;gap:.5rem;">
+            <i class="bi bi-envelope-check" style="font-size:1rem;"></i>
+            <span>We'll notify you when your order ships. Estimated delivery: <strong>3–5 business days</strong>.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-lg-5">
+        <div class="cart-summary">
+          <div class="cart-summary-title">What's Next?</div>
+
+          <div style="font-size:.9rem;color:var(--text-light);line-height:1.8;margin-bottom:1.2rem;">
+            Your order is now <strong style="color:#2e7d32;">confirmed</strong> and will be processed shortly.
+            We'll send updates to <strong>{{ order.email }}</strong>.
+          </div>
+
+          <a href="{{ url_for('shop') }}" class="btn-beauty w-100 text-center"
+             style="display:block;padding:.75rem;margin-bottom:.8rem;">
+            <i class="bi bi-shop me-1"></i>Continue Shopping
+          </a>
+          <a href="{{ url_for('upload') }}" class="btn-beauty-outline w-100 text-center"
+             style="display:block;padding:.7rem;margin-bottom:.8rem;">
+            <i class="bi bi-camera me-1"></i>New Skin Analysis
+          </a>
+          <a href="{{ url_for('questionnaire') }}" class="btn-beauty-outline w-100 text-center"
+             style="display:block;padding:.7rem;">
+            <i class="bi bi-clipboard-check me-1"></i>Retake Quiz
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

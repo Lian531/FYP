@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Edit Product — Lumière{% endblock %}
+
+{% block content %}
+<div style="background:#f9f4f0;min-height:90vh;padding:2rem 0;">
+<div class="container" style="max-width:680px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h2 style="font-weight:800;color:var(--dark);margin:0;">
+        <i class="bi bi-pencil-square me-2 text-beauty"></i>Edit Product
+      </h2>
+      <p style="color:var(--text-light);font-size:.9rem;margin:0;">
+        ID #{{ product.id }} — {{ product.name }}
+      </p>
+    </div>
+    <a href="{{ url_for('admin') }}" class="btn-beauty-outline">
+      <i class="bi bi-arrow-left me-1"></i>Back to Admin
+    </a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'danger' if cat == 'error' else 'success' }} mb-3"
+           style="border-radius:12px;font-size:.9rem;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="admin-card">
+    <form method="POST"
+          action="{{ url_for('admin_edit_product', product_id=product.id) }}">
+      <div class="modal-body" style="padding:1.5rem;">
+        <div class="row g-3">
+
+          <div class="col-12">
+            <label class="form-label-beauty">Product Name *</label>
+            <input type="text" name="name" class="form-control-beauty"
+                   value="{{ product.name or '' }}"
+                   placeholder="e.g. Matte Control Foundation" required />
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Brand</label>
+            <input type="text" name="brand" class="form-control-beauty"
+                   value="{{ product.brand or '' }}"
+                   placeholder="e.g. Lumière" />
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Category *</label>
+            <select name="category" class="form-control-beauty" required>
+              <option value="">Select…</option>
+              {% for cat in ['Foundation','Face Wash','Moisturizer','Sunscreen','Concealer','Lipstick','Powder'] %}
+                <option value="{{ cat }}"
+                  {{ 'selected' if (product.category or '') == cat else '' }}>
+                  {{ cat }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Skin Type *</label>
+            <select name="skin_type" class="form-control-beauty" required>
+              {% for val, label in [('all','All Types'),('oily','Oily'),('dry','Dry'),
+                                    ('normal','Normal'),('combination','Combination'),
+                                    ('sensitive','Sensitive')] %}
+                <option value="{{ val }}"
+                  {{ 'selected' if (product.skin_type or 'all') == val else '' }}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Skin Tone Target *</label>
+            <select name="skin_tone_target" class="form-control-beauty" required>
+              {% for val, label in [('white','White / Fair'),('brown','Brown / Medium'),
+                                    ('black','Black / Deep')] %}
+                <option value="{{ val }}"
+                  {{ 'selected' if (product.skin_tone_target or '') == val else '' }}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Price (NPR)</label>
+            <input type="number" name="price" class="form-control-beauty"
+                   value="{{ product.price if product.price is not none else '' }}"
+                   placeholder="999.00" step="0.01" min="0" />
+          </div>
+
+          <div class="col-6">
+            <label class="form-label-beauty">Stock</label>
+            <input type="number" name="stock" class="form-control-beauty"
+                   value="{{ product.stock if product.stock is not none else '' }}"
+                   placeholder="Leave blank = in stock" min="0" />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label-beauty">Image URL</label>
+            <input type="text" name="image_url" class="form-control-beauty"
+                   value="{{ product.image_url or '' }}"
+                   placeholder="images/products/filename.jpg" />
+            <small style="color:var(--text-light);font-size:.78rem;">
+              Leave blank to keep existing image.
+            </small>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label-beauty">Description</label>
+            <textarea name="description" class="form-control-beauty" rows="3"
+                      placeholder="Short product description…">{{ product.description or '' }}</textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer"
+           style="padding:1rem 1.5rem;border-top:1px solid var(--accent-dark);
+                  display:flex;gap:.75rem;justify-content:flex-end;">
+        <a href="{{ url_for('admin') }}" class="btn-beauty-outline">Cancel</a>
+        <button type="submit" class="btn-beauty">
+          <i class="bi bi-check-lg me-1"></i>Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+</div>
+{% endblock %}

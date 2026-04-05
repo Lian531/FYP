@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Lumière{% endblock %}
+
+{% block content %}
+
+{% set cat_icons = {
+  'Foundation': '💄', 'Face Wash': '🧴', 'Moisturizer': '💆',
+  'Sunscreen': '☀️', 'Concealer': '✨', 'Lipstick': '💋', 'Powder': '🌸',
+} %}
+
+<!-- Breadcrumb -->
+<div style="background:var(--white);border-bottom:1px solid rgba(200,168,130,.2);padding:.7rem 0;">
+  <div class="container">
+    <nav style="font-size:.88rem;color:var(--text-light);">
+      <a href="{{ url_for('shop') }}" style="color:var(--primary);font-weight:600;">Shop</a>
+      <span class="mx-2">›</span>
+      <a href="{{ url_for('shop') }}?category={{ product.category }}"
+         style="color:var(--primary);font-weight:600;">{{ product.category }}</a>
+      <span class="mx-2">›</span>
+      <span>{{ product.name }}</span>
+    </nav>
+  </div>
+</div>
+
+<!-- ── PRODUCT DETAIL ── -->
+<section class="section" style="background:#fdf7f3;padding-top:2.5rem;">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+
+      <!-- Image Column -->
+      <div class="col-md-5">
+        {% if product.image_url %}
+          <img src="{{ url_for('static', filename=product.image_url) }}"
+               alt="{{ product.name }}" class="product-detail-img">
+        {% else %}
+          <div class="product-detail-placeholder">
+            {{ cat_icons.get(product.category, '🛍️') }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Info Column -->
+      <div class="col-md-7">
+        <div class="product-detail-card">
+
+          <div class="product-cat-badge mb-2">{{ product.category }}</div>
+          <h1 style="font-size:1.7rem;font-weight:800;color:var(--dark);margin-bottom:.3rem;">
+            {{ product.name }}
+          </h1>
+          <div class="product-brand mb-3" style="font-size:.95rem;">
+            <i class="bi bi-building me-1"></i>{{ product.brand or 'Lumière Brand' }}
+          </div>
+
+          <!-- Price & Stock -->
+          <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            {% if product.price %}
+              <div style="font-size:1.7rem;font-weight:800;color:var(--secondary);">
+                NPR {{ "%.2f"|format(product.price) }}
+              </div>
+            {% endif %}
+            {% if product.stock is none or product.stock > 0 %}
+              <span class="stock-badge in-stock" style="font-size:.85rem;">
+                <i class="bi bi-check-circle-fill me-1"></i>In Stock
+                {% if product.stock is not none %}({{ product.stock }} left){% endif %}
+              </span>
+            {% else %}
+              <span class="stock-badge out-of-stock" style="font-size:.85rem;">
+                <i class="bi bi-x-circle-fill me-1"></i>Out of Stock
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          {% if product.description %}
+            <p style="color:var(--text-light);line-height:1.75;margin-bottom:1.2rem;">
+              {{ product.description }}
+            </p>
+          {% endif %}
+
+          <!-- Suitability Tags -->
+          <div class="mb-3">
+            <div style="font-size:.82rem;font-weight:700;color:var(--dark);
+                        text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+              Skin Suitability
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              {% if product.skin_type %}
+                <span class="tag-pill">
+                  <i class="bi bi-clipboard-check me-1"></i>
+                  {% if product.skin_type == 'all' %}All Skin Types
+                  {% else %}{{ product.skin_type | capitalize }} Skin{% endif %}
+                </span>
+              {% endif %}
+              {% if product.skin_tone_target %}
+                <span class="tag-pill"
+                  style="{% if product.skin_tone_target == 'brown' %}background:#a0624a;color:white;
+                         {% elif product.skin_tone_target == 'black' %}background:#3d2314;color:white;
+                         {% endif %}">
+                  <i class="bi bi-palette me-1"></i>
+                  {% if product.skin_tone_target == 'all' %}All Skin Tones
+                  {% else %}{{ product.skin_tone_target | capitalize }} Tone{% endif %}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Add to Cart -->
+          {% if product.stock is none or product.stock > 0 %}
+            <form class="ajax-cart-form" action="{{ url_for('cart_add') }}" method="post">
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <div class="qty-selector">
+                <span style="font-weight:600;color:var(--dark);font-size:.9rem;">Qty:</span>
+                <button type="button" class="qty-btn"
+                        onclick="adjQty(-1)">−</button>
+                <input type="number" name="quantity" id="qty" value="1" min="1" max="99"
+                       class="qty-input">
+                <button type="button" class="qty-btn"
+                        onclick="adjQty(1)">+</button>
+              </div>
+              <div class="d-flex gap-2 flex-wrap mt-1">
+                <button type="submit" class="btn-beauty btn-beauty-lg">
+                  <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                </button>
+                <a href="{{ url_for('cart_view') }}" class="btn-beauty-outline btn-beauty-lg">
+                  <i class="bi bi-cart3 me-1"></i>View Cart
+                </a>
+              </div>
+            </form>
+          {% else %}
+            <button class="btn-beauty btn-beauty-lg" disabled style="opacity:.5;cursor:not-allowed;">
+              <i class="bi bi-x-circle me-2"></i>Out of Stock
+            </button>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Back -->
+    <div class="mt-4">
+      <a href="{{ url_for('shop') }}" class="btn-beauty-outline">
+        <i class="bi bi-arrow-left me-1"></i>Back to Shop
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function adjQty(delta) {
+  var el = document.getElementById('qty');
+  var v = parseInt(el.value) + delta;
+  el.value = Math.max(1, Math.min(99, v));
+}
+</script>
+{% endblock %}

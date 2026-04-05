@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Lumière{% endblock %}
+
+{% block content %}
+<div style="background:#f9f4f0;min-height:90vh;padding:2rem 0;">
+<div class="container-fluid px-4">
+
+  <!-- Page header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h2 style="font-weight:800;color:var(--dark);margin:0;">
+        <i class="bi bi-gear-fill me-2 text-beauty"></i>Admin Dashboard
+      </h2>
+      <p style="color:var(--text-light);font-size:.9rem;margin:0;">
+        Logged in as <strong>{{ session.get('user_name') }}</strong>
+      </p>
+    </div>
+    <a href="{{ url_for('home') }}" class="btn-beauty-outline">
+      <i class="bi bi-house me-1"></i>View Site
+    </a>
+  </div>
+
+  <!-- ── STAT CARDS ── -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-number">{{ stats.total_users }}</div>
+        <div style="font-size:1.8rem;margin-top:.3rem;">👤</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card secondary">
+        <div class="stat-label">Products</div>
+        <div class="stat-number">{{ stats.total_products }}</div>
+        <div style="font-size:1.8rem;margin-top:.3rem;">💄</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card accent-c">
+        <div class="stat-label">Analyses Run</div>
+        <div class="stat-number">{{ stats.total_analyses }}</div>
+        <div style="font-size:1.8rem;margin-top:.3rem;">📸</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card info-c">
+        <div class="stat-label">Recommendations</div>
+        <div class="stat-number">{{ stats.total_recs }}</div>
+        <div style="font-size:1.8rem;margin-top:.3rem;">🛍️</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── PRODUCTS TABLE ── -->
+    <div class="col-12">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">
+            <i class="bi bi-bag-heart-fill text-beauty"></i>
+            Products ({{ products | length }})
+          </div>
+          <button class="btn-beauty" data-bs-toggle="modal"
+                  data-bs-target="#addProductModal"
+                  style="font-size:.85rem;padding:.4rem 1rem;">
+            <i class="bi bi-plus-lg me-1"></i>Add Product
+          </button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="table-beauty w-100">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Skin Type</th>
+                <th>Skin Tone</th>
+                <th>Price</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td style="color:var(--text-light);">{{ p.id }}</td>
+                <td style="font-weight:600;color:var(--dark);min-width:160px;">{{ p.name }}</td>
+                <td>{{ p.brand or '—' }}</td>
+                <td><span class="tag-pill" style="font-size:.75rem;">{{ p.category }}</span></td>
+                <td>
+                  <span class="tag-pill" style="{{ 'font-size:.75rem;background:#e3f0fd;color:#1565c0;' if p.skin_type|trim|lower=='oily' else 'font-size:.75rem;background:#fde8e8;color:#c0392b;' if p.skin_type|trim|lower=='dry' else 'font-size:.75rem;background:#fef9e7;color:#7d6608;' if p.skin_type|trim|lower=='sensitive' else 'font-size:.75rem;background:#e8f8f5;color:#117864;' if p.skin_type|trim|lower=='combination' else 'font-size:.75rem;background:#f0ffe8;color:#2d6a4f;' if p.skin_type|trim|lower=='normal' else 'font-size:.75rem;background:var(--accent);color:var(--secondary);' }}">
+                    {{ p.skin_type | capitalize }}
+                  </span>
+                </td>
+                <td>
+                  <span>{{ (p.skin_tone_target or '—') | capitalize }}</span>
+                </td>
+                <td style="font-weight:600;color:var(--secondary);">
+                  {% if p.price %}NPR {{ "%.2f"|format(p.price) }}{% else %}—{% endif %}
+                </td>
+                <td style="white-space:nowrap;">
+                  <a href="{{ url_for('admin_edit_product', product_id=p.id) }}"
+                     style="background:#e8f4fd;border:none;color:#1565c0;
+                            padding:.3rem .7rem;border-radius:8px;cursor:pointer;
+                            font-size:.8rem;font-weight:600;text-decoration:none;
+                            display:inline-block;margin-right:.3rem;">
+                    <i class="bi bi-pencil"></i> Edit
+                  </a>
+                  <form method="POST"
+                        action="{{ url_for('admin_delete_product', product_id=p.id) }}"
+                        onsubmit="return confirm('Delete product: {{ p.name }}?');"
+                        style="display:inline;">
+                    <button type="submit"
+                            style="background:#fde8e8;border:none;color:#c0392b;
+                                   padding:.3rem .7rem;border-radius:8px;cursor:pointer;
+                                   font-size:.8rem;font-weight:600;">
+                      <i class="bi bi-trash3"></i> Del
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-4" style="color:var(--text-light);">
+                  No products yet. Click "Add Product" to get started.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS TABLE ── -->
+    <div class="col-lg-7">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">
+            <i class="bi bi-people-fill text-beauty"></i>
+            Registered Users ({{ users | length }})
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="table-beauty w-100">
+            <thead>
+              <tr>
+                <th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in users %}
+              <tr>
+                <td style="color:var(--text-light);">{{ u.id }}</td>
+                <td style="font-weight:600;">{{ u.name }}</td>
+                <td style="font-size:.85rem;color:var(--text-light);">{{ u.email }}</td>
+                <td>
+                  {% if u.is_admin %}
+                    <span style="background:linear-gradient(135deg,var(--primary),var(--secondary));
+                                 color:white;font-size:.72rem;padding:.2rem .6rem;
+                                 border-radius:12px;font-weight:700;">Admin</span>
+                  {% else %}
+                    <span class="tag-pill" style="font-size:.72rem;">User</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:.82rem;color:var(--text-light);">
+                  {{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}
+                </td>
+                <td>
+                  {% if u.id != session.get('user_id') %}
+                  <form method="POST"
+                        action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                        onsubmit="return confirm('Delete user {{ u.name }}? This removes all their data.');"
+                        style="display:inline;">
+                    <button type="submit"
+                            style="background:#fde8e8;border:none;color:#c0392b;
+                                   padding:.3rem .7rem;border-radius:8px;cursor:pointer;
+                                   font-size:.8rem;">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </form>
+                  {% else %}
+                  <span style="font-size:.8rem;color:var(--text-light);font-style:italic;">you</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-4" style="color:var(--text-light);">
+                  No users yet.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RECENT ANALYSES ── -->
+    <div class="col-lg-5">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">
+            <i class="bi bi-camera-fill text-beauty"></i>
+            Recent Analyses (last 15)
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="table-beauty w-100">
+            <thead>
+              <tr><th>User</th><th>Skin Type</th><th>Tone</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+              {% for a in analyses %}
+              <tr>
+                <td style="font-weight:600;font-size:.88rem;">
+                  {{ a.user.name if a.user else '—' }}
+                </td>
+                <td>
+                  <span class="tag-pill" style="font-size:.72rem;">
+                    {{ (a.skin_type or '—') | capitalize }}
+                  </span>
+                </td>
+                <td>
+                  <span>{{ (a.predicted_tone or '—') | capitalize }}</span>
+                </td>
+                <td style="font-size:.8rem;color:var(--text-light);">
+                  {{ a.created_at.strftime('%d %b') if a.created_at else '—' }}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4" style="color:var(--text-light);">
+                  No analyses yet.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+</div><!-- /container -->
+</div>
+
+<!-- ── ADD PRODUCT MODAL ── -->
+<div class="modal fade modal-beauty" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle me-2 text-beauty"></i>Add New Product
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin_add_product') }}" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label-beauty">Product Name *</label>
+              <input type="text" name="name" class="form-control-beauty"
+                     placeholder="e.g. Matte Control Foundation" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label-beauty">Brand</label>
+              <input type="text" name="brand" class="form-control-beauty"
+                     placeholder="e.g. Lumière" />
+            </div>
+            <div class="col-6">
+              <label class="form-label-beauty">Category *</label>
+              <select name="category" class="form-control-beauty" required>
+                <option value="">Select…</option>
+                <option>Foundation</option>
+                <option>Face Wash</option>
+                <option>Moisturizer</option>
+                <option>Sunscreen</option>
+                <option>Concealer</option>
+                <option>Lipstick</option>
+                <option>Powder</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-beauty">Skin Type *</label>
+              <select name="skin_type" class="form-control-beauty" required>
+                <option value="all">All Types</option>
+                <option value="oily">Oily</option>
+                <option value="dry">Dry</option>
+                <option value="normal">Normal</option>
+                <option value="combination">Combination</option>
+                <option value="sensitive">Sensitive</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-beauty">Skin Tone *</label>
+              <select name="skin_tone" class="form-control-beauty" required>
+                <option value="all">All Tones</option>
+                <option value="white">White / Fair</option>
+                <option value="brown">Brown / Medium</option>
+                <option value="black">Black / Deep</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-beauty">Price (USD)</label>
+              <input type="number" name="price" class="form-control-beauty"
+                     placeholder="24.99" step="0.01" min="0" />
+            </div>
+            <div class="col-12">
+              <label class="form-label-beauty">Description</label>
+              <textarea name="description" class="form-control-beauty" rows="3"
+                        placeholder="Short product description…"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label-beauty">Product Image</label>
+              <input type="file" name="image" accept="image/*" class="form-control-beauty" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--accent-dark);">
+          <button type="button" class="btn-beauty-outline"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-beauty">
+            <i class="bi bi-plus-lg me-1"></i>Add Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

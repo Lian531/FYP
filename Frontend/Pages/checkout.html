@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Lumière{% endblock %}
+
+{% block content %}
+
+<!-- ── CHECKOUT HERO ── -->
+<section class="checkout-hero">
+  <div class="container">
+    <h1 class="section-title mb-2">
+      <i class="bi bi-bag-check me-2" style="color:var(--primary);"></i>Checkout
+    </h1>
+    <p class="section-subtitle">Complete your order details below.</p>
+  </div>
+</section>
+
+<!-- ── CHECKOUT CONTENT ── -->
+<section class="section" style="background:#fdf7f3;padding-top:2rem;">
+  <div class="container">
+
+    <form action="{{ url_for('checkout') }}" method="post" id="checkoutForm" novalidate>
+      <div class="row g-4">
+
+        <!-- Delivery Form -->
+        <div class="col-lg-7">
+          <div class="checkout-form-card">
+
+            <div class="checkout-section-title">
+              <i class="bi bi-person-fill" style="color:var(--primary);"></i>
+              Delivery Information
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label-beauty">Full Name *</label>
+                <input type="text" name="name" id="co-name" class="form-control-beauty"
+                       placeholder="Jane Smith" required
+                       value="{{ prefill.get('name', session.get('user_name', '')) if prefill else session.get('user_name', '') }}">
+                <div class="field-error" id="nameErr"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label-beauty">Email Address *</label>
+                <input type="email" name="email" id="co-email" class="form-control-beauty"
+                       placeholder="jane@example.com" required
+                       value="{{ prefill.get('email', '') if prefill else '' }}">
+                <div class="field-error" id="emailErr"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label-beauty">Phone Number</label>
+                <input type="tel" name="phone" class="form-control-beauty"
+                       placeholder="+1 (555) 000-0000"
+                       value="{{ prefill.get('phone', '') if prefill else '' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label-beauty">Delivery Address *</label>
+                <textarea name="address" id="co-address" class="form-control-beauty" rows="3"
+                          placeholder="Street address, city, postcode, country"
+                          required style="resize:vertical;">{{ prefill.get('address', '') if prefill else '' }}</textarea>
+                <div class="field-error" id="addrErr"></div>
+              </div>
+            </div>
+
+            <div class="mt-4 p-3" style="background:var(--accent);border-radius:var(--radius-sm);">
+              <div style="font-size:.85rem;color:var(--text-light);display:flex;align-items:center;gap:.5rem;">
+                <i class="bi bi-shield-check" style="color:var(--primary);font-size:1rem;"></i>
+                <span>This is a demo system — no real payment is processed. Your order will be saved and marked as <strong>pending</strong>.</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-5">
+          <div class="cart-summary">
+            <div class="cart-summary-title">
+              <i class="bi bi-receipt me-1"></i>Order Summary
+            </div>
+
+            {% set cat_icons = {
+              'Foundation': '💄', 'Face Wash': '🧴', 'Moisturizer': '💆',
+              'Sunscreen': '☀️', 'Concealer': '✨', 'Lipstick': '💋', 'Powder': '🌸',
+            } %}
+
+            {% set subtotal = namespace(val=0) %}
+
+            {% for item in items %}
+              {% set subtotal.val = subtotal.val + item.line_total %}
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                          padding:.55rem 0;border-bottom:1px solid #f0e8e0;font-size:.88rem;">
+                <div>
+                  <span style="font-weight:600;color:var(--dark);">{{ item.product.name }}</span><br>
+                  <span style="color:var(--text-light);font-size:.8rem;">
+                    {{ cat_icons.get(item.product.category, '🛍️') }} × {{ item.quantity }}
+                  </span>
+                </div>
+                <span style="font-weight:700;color:var(--secondary);white-space:nowrap;margin-left:.5rem;">
+                  NPR {{ "%.2f"|format(item.line_total) }}
+                </span>
+              </div>
+            {% endfor %}
+
+            <div class="cart-summary-row mt-2">
+              <span>Subtotal</span>
+              <span>NPR {{ "%.2f"|format(subtotal.val) }}</span>
+            </div>
+            <div class="cart-summary-row">
+              <span>Shipping</span>
+              <span style="color:#2e7d32;font-weight:600;">Free</span>
+            </div>
+            <div class="cart-summary-total">
+              <span>Total</span>
+              <span>NPR {{ "%.2f"|format(subtotal.val) }}</span>
+            </div>
+
+            <button type="submit" class="btn-beauty w-100 mt-3" id="placeOrderBtn"
+                    style="padding:.8rem;font-size:1rem;">
+              <i class="bi bi-bag-check-fill me-2"></i>Place Order
+            </button>
+
+            <a href="{{ url_for('cart_view') }}"
+               class="btn-beauty-outline w-100 mt-2 text-center"
+               style="display:block;padding:.55rem;">
+              <i class="bi bi-arrow-left me-1"></i>Back to Cart
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function setErr(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+  }
+
+  document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    let ok = true;
+    const name  = document.getElementById('co-name').value.trim();
+    const email = document.getElementById('co-email').value.trim();
+    const addr  = document.getElementById('co-address').value.trim();
+
+    setErr('nameErr', ''); setErr('emailErr', ''); setErr('addrErr', '');
+
+    if (!name || name.length < 2) {
+      setErr('nameErr', 'Please enter your full name.');
+      ok = false;
+    }
+    if (!email) {
+      setErr('emailErr', 'Email address is required.');
+      ok = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErr('emailErr', 'Please enter a valid email address.');
+      ok = false;
+    }
+    if (!addr) {
+      setErr('addrErr', 'Delivery address is required.');
+      ok = false;
+    }
+
+    if (!ok) { e.preventDefault(); return; }
+
+    const btn = document.getElementById('placeOrderBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Placing order…';
+  });
+</script>
+{% endblock %}
